@@ -21,8 +21,45 @@ object TreeManager {
         buildUp(makeBlocks(data))(0)
     }
 
+    // _buildUp : take an initial Array of data blocks (leaf nodes) and
+    // recursively build a tree in a bottom-up manner making parent
+    // nodes unitil we are left with 1 root node.
+    private def buildUp(blocks: Array[Node]) : Array[Node] = {
+        if (blocks.length == 1) blocks
+        else buildUp(parentNodes(blocks).toArray)
+    }
+
+    // parentNodes :
+    def parentNodes(blocks: Array[Node]) : Iterator[Node] = {
+        for {
+            pair <- blocks.grouped(2)
+        } yield new Node(pair.mkString,
+                         pair(0),
+                         if (pair.length > 1) pair(1) else null)
+    }
+
+    // makeBlocks : splits the input into each of the data blocks which will
+    // form the leaf nodes of the tree.
+    def makeBlocks(str: String) : Array[Node] = {
+        str.split("\n").map(new Node(_))
+    }
+
     def hashCmp(a: Node, b: Node) : diffPair = {
         _hashCmp(a, b, ArrayBuffer[(Node, Node)]())
+    }
+
+    private def _hashCmp(a: Node, b: Node, arr: diffPair) : diffPair = {
+        if (a.hash == b.hash) {
+            arr
+        } else {
+            if (a.isLeaf && b.isLeaf)
+                arr.append((a, b))
+            if (a.hasLeftChild && b.hasLeftChild)
+                _hashCmp(a.leftChild, b.leftChild, arr)
+            if (a.hasRightChild && b.hasRightChild)
+                _hashCmp(a.rightChild, b.rightChild, arr)
+            arr
+        }
     }
 
     // printTree : for a given Node it and all of its children.
@@ -41,42 +78,6 @@ object TreeManager {
         }
     }
 
-    // _buildUp : take an initial Array of data blocks (leaf nodes) and
-    // recursively build a tree in a bottom-up manner making parent
-    // nodes unitil we are left with 1 root node.
-    private def buildUp(blocks: Array[Node]) : Array[Node] = {
-        if (blocks.length == 1) blocks
-        else buildUp(parentNodes(blocks).toArray)
-    }
-
-    // parentNodes :
-    def parentNodes(blocks: Array[Node]) : Iterator[Node] = {
-        for {
-            pair <- blocks.grouped(2)
-        } yield new Node(pair.mkString,
-                         pair(0),
-                         if (pair.length > 1) pair(1) else null)
-    }
-
-    private def _hashCmp(a: Node, b: Node, arr: diffPair) : diffPair = {
-        if (a.hash == b.hash) {
-            arr
-        } else {
-            if (a.isLeaf && b.isLeaf)
-                arr.append((a, b))
-            if (a.hasLeftChild && b.hasLeftChild)
-                _hashCmp(a.leftChild, b.leftChild, arr)
-            if (a.hasRightChild && b.hasRightChild)
-                _hashCmp(a.rightChild, b.rightChild, arr)
-            arr
-        }
-    }
-
-    // makeBlocks : splits the input into each of the data blocks which will
-    // form the leaf nodes of the tree.
-    def makeBlocks(str: String) : Array[Node] = {
-        str.split("\n").map(new Node(_))
-    }
 }
 
 
